@@ -82,6 +82,21 @@ const ClassRoutineOrganizer = () => {
     return conflicts;
   }, [routineData]);
 
+  // Global auto-scroll handler
+  const autoScrollOnDrag = (e) => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const mouseY = e.clientY;
+      const scrollSpeed = 30;
+      if (mouseY - rect.top < 40) {
+        container.scrollTop -= scrollSpeed;
+      } else if (rect.bottom - mouseY < 40) {
+        container.scrollTop += scrollSpeed;
+      }
+    }
+  };
+
   const handleDragStart = useCallback((e, batchIndex, dayIndex, timeIndex) => {
     const classDetail = routineData.find(
       cls => cls.batchIndex === batchIndex && cls.dayIndex === dayIndex && cls.timeIndex === timeIndex
@@ -89,12 +104,15 @@ const ClassRoutineOrganizer = () => {
     if (!classDetail) return;
     setDraggedItem({ batchIndex, dayIndex, timeIndex, classDetail });
     e.dataTransfer.effectAllowed = 'move';
+    // Add global dragover listener
+    document.addEventListener('dragover', autoScrollOnDrag);
   }, [routineData]);
 
   const handleDragOver = useCallback((e, batchIndex, dayIndex, timeIndex) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverCell({ batch: batchIndex, day: dayIndex, time: timeIndex });
+    // No local auto-scroll logic needed; handled globally
   }, []);
 
   const handleDragLeave = useCallback(() => {
@@ -186,6 +204,8 @@ const ClassRoutineOrganizer = () => {
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);
     setDragOverCell(null);
+    // Remove global dragover listener
+    document.removeEventListener('dragover', autoScrollOnDrag);
   }, []);
 
   const openModal = (batchIndex, dayIndex, timeIndex) => {
