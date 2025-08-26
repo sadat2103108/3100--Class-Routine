@@ -66,26 +66,44 @@ const ClassModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Teacher
               </label>
-              <input
-                type="text"
+              <select
                 value={modalData.teacher}
                 onChange={e => setModalData(prev => ({ ...prev, teacher: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter teacher name"
-              />
+              >
+                <option value="">Select teacher</option>
+                <option value="Dr. Ahmed">Dr. Ahmed</option>
+                <option value="Ms. Rahman">Ms. Rahman</option>
+                <option value="Mr. Chowdhury">Mr. Chowdhury</option>
+                <option value="Dr. Islam">Dr. Islam</option>
+                <option value="Ms. Akter">Ms. Akter</option>
+                <option value="Mr. Hossain">Mr. Hossain</option>
+                <option value="Dr. Karim">Dr. Karim</option>
+                <option value="Ms. Sultana">Ms. Sultana</option>
+                <option value="Guest">Guest</option>
+              </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Room
               </label>
-              <input
-                type="text"
+              <select
                 value={modalData.room}
                 onChange={e => setModalData(prev => ({ ...prev, room: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter room number"
-              />
+              >
+                <option value="">Select room</option>
+                <option value="101">101</option>
+                <option value="102">102</option>
+                <option value="201">201</option>
+                <option value="202">202</option>
+                <option value="301">301</option>
+                <option value="302">302</option>
+                <option value="Lab A">Lab A</option>
+                <option value="Lab B">Lab B</option>
+                <option value="Auditorium">Auditorium</option>
+              </select>
             </div>
 
             <div>
