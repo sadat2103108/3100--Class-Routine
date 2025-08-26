@@ -1,8 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Plus, Edit2, Trash2, GripVertical, Copy, AlertTriangle } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
+import ClassModal from './ClassRoutine/ClassModal';
 
 const ClassRoutineOrganizer = () => {
   const [draggedItem, setDraggedItem] = useState(null);
+  const [dropChoice, setDropChoice] = useState(null); // {batchIndex, dayIndex, timeIndex}
+  const [isDropModalOpen, setIsDropModalOpen] = useState(false);
   const [dragOverCell, setDragOverCell] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCell, setEditingCell] = useState(null);
@@ -21,8 +24,16 @@ const ClassRoutineOrganizer = () => {
   ];
   const batches = Array.from({ length: 15 }, (_, i) => `Batch ${Math.floor(i / 3) + 1} - Section ${String.fromCharCode(65 + (i % 3))}`);
 
-  // Initialize grid data
+  // Initialize grid data from localStorage or default
   const [gridData, setGridData] = useState(() => {
+    const saved = localStorage.getItem('classRoutineGridData');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback to default if corrupted
+      }
+    }
     return Array(15).fill(null).map(() =>
       Array(5).fill(null).map(() =>
         Array(9).fill(null)
@@ -30,44 +41,55 @@ const ClassRoutineOrganizer = () => {
     );
   });
 
+  // Save gridData to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('classRoutineGridData', JSON.stringify(gridData));
+  }, [gridData]);
+
   const scrollContainerRef = useRef(null);
 
   // Check for conflicts (same teacher or room in same time slot)
+  const [routineData, setRoutineData] = useState(() => {
+    const saved = localStorage.getItem('classRoutineFlatData');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
+  useEffect(() => {
+    localStorage.setItem('classRoutineFlatData', JSON.stringify(routineData));
+  }, [routineData]);
+
   const getConflicts = useCallback((batchIndex, dayIndex, timeIndex, currentClass) => {
     const conflicts = [];
-    const currentTimeSlot = timeIndex;
-    
-    // Check all batches for the same time slot
-    for (let b = 0; b < gridData.length; b++) {
-      if (b === batchIndex) continue; // Skip current batch
-      
-      const classAtSameTime = gridData[b][dayIndex][currentTimeSlot];
-      if (classAtSameTime && currentClass) {
-        if (classAtSameTime.teacher === currentClass.teacher && classAtSameTime.teacher.trim()) {
-          conflicts.push({ type: 'teacher', batch: b, class: classAtSameTime });
+    routineData.forEach(cls => {
+      if (
+        cls.batchIndex === batchIndex &&
+        cls.dayIndex === dayIndex &&
+        cls.timeIndex === timeIndex
+      ) return; // skip current cell
+      if (cls.dayIndex === dayIndex && cls.timeIndex === timeIndex) {
+        if (cls.teacher === currentClass.teacher && cls.teacher.trim()) {
+          conflicts.push({ type: 'teacher', batch: cls.batchIndex, class: cls });
         }
-        if (classAtSameTime.room === currentClass.room && classAtSameTime.room.trim()) {
-          conflicts.push({ type: 'room', batch: b, class: classAtSameTime });
+        if (cls.room === currentClass.room && cls.room.trim()) {
+          conflicts.push({ type: 'room', batch: cls.batchIndex, class: cls });
         }
       }
-    }
-    
+    });
     return conflicts;
-  }, [gridData]);
+  }, [routineData]);
 
   const handleDragStart = useCallback((e, batchIndex, dayIndex, timeIndex) => {
-    const classDetail = gridData[batchIndex][dayIndex][timeIndex];
+    const classDetail = routineData.find(
+      cls => cls.batchIndex === batchIndex && cls.dayIndex === dayIndex && cls.timeIndex === timeIndex
+    );
     if (!classDetail) return;
-
-    setDraggedItem({
-      batchIndex,
-      dayIndex,
-      timeIndex,
-      classDetail
-    });
-
+    setDraggedItem({ batchIndex, dayIndex, timeIndex, classDetail });
     e.dataTransfer.effectAllowed = 'move';
-  }, [gridData]);
+  }, [routineData]);
 
   const handleDragOver = useCallback((e, batchIndex, dayIndex, timeIndex) => {
     e.preventDefault();
@@ -82,23 +104,84 @@ const ClassRoutineOrganizer = () => {
   const handleDrop = useCallback((e, batchIndex, dayIndex, timeIndex) => {
     e.preventDefault();
     setDragOverCell(null);
-
     if (!draggedItem) return;
-
-    setGridData(prev => {
-      const newData = prev.map(batch => batch.map(day => [...day]));
-      
-      // Remove from original position
-      newData[draggedItem.batchIndex][draggedItem.dayIndex][draggedItem.timeIndex] = null;
-      
-      // Add to new position
-      newData[batchIndex][dayIndex][timeIndex] = draggedItem.classDetail;
-      
+    const isCopy = e.ctrlKey || e.metaKey;
+    setRoutineData(prev => {
+      let newData = [...prev];
+      // Remove any class in the target cell
+      newData = newData.filter(cls =>
+        !(cls.batchIndex === batchIndex &&
+          cls.dayIndex === dayIndex &&
+          cls.timeIndex === timeIndex)
+      );
+      if (isCopy) {
+        // Add a copy to new position
+        newData.push({
+          ...draggedItem.classDetail,
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          batchIndex,
+          dayIndex,
+          timeIndex
+        });
+      } else {
+        // Remove from original position
+        newData = newData.filter(cls =>
+          !(cls.batchIndex === draggedItem.batchIndex &&
+            cls.dayIndex === draggedItem.dayIndex &&
+            cls.timeIndex === draggedItem.timeIndex)
+        );
+        // Add to new position
+        newData.push({ ...draggedItem.classDetail, batchIndex, dayIndex, timeIndex });
+      }
       return newData;
     });
-
     setDraggedItem(null);
+    setDropChoice(null);
+    setIsDropModalOpen(false);
   }, [draggedItem]);
+
+  const handleDropAction = (action) => {
+    if (!draggedItem || !dropChoice) {
+      setIsDropModalOpen(false);
+      setDraggedItem(null);
+      setDropChoice(null);
+      setDragOverCell(null);
+      return;
+    }
+    setRoutineData(prev => {
+      let newData = [...prev];
+      // Remove any class in the target cell
+      newData = newData.filter(cls =>
+        !(cls.batchIndex === dropChoice.batchIndex &&
+          cls.dayIndex === dropChoice.dayIndex &&
+          cls.timeIndex === dropChoice.timeIndex)
+      );
+      if (action === 'move') {
+        // Remove from original position
+        newData = newData.filter(cls =>
+          !(cls.batchIndex === draggedItem.batchIndex &&
+            cls.dayIndex === draggedItem.dayIndex &&
+            cls.timeIndex === draggedItem.timeIndex)
+        );
+        // Add to new position
+        newData.push({ ...draggedItem.classDetail, batchIndex: dropChoice.batchIndex, dayIndex: dropChoice.dayIndex, timeIndex: dropChoice.timeIndex });
+      } else if (action === 'copy') {
+        // Add a copy to new position
+        newData.push({
+          ...draggedItem.classDetail,
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          batchIndex: dropChoice.batchIndex,
+          dayIndex: dropChoice.dayIndex,
+          timeIndex: dropChoice.timeIndex
+        });
+      }
+      return newData;
+    });
+    setIsDropModalOpen(false);
+    setDraggedItem(null);
+    setDropChoice(null);
+    setDragOverCell(null);
+  };
 
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);
@@ -106,8 +189,9 @@ const ClassRoutineOrganizer = () => {
   }, []);
 
   const openModal = (batchIndex, dayIndex, timeIndex) => {
-    const existingClass = gridData[batchIndex][dayIndex][timeIndex];
-    
+    const existingClass = routineData.find(
+      cls => cls.batchIndex === batchIndex && cls.dayIndex === dayIndex && cls.timeIndex === timeIndex
+    );
     setEditingCell({ batch: batchIndex, day: dayIndex, time: timeIndex });
     setModalData(existingClass || {
       id: '',
@@ -127,41 +211,41 @@ const ClassRoutineOrganizer = () => {
 
   const saveClassDetail = () => {
     if (!editingCell) return;
-
     const classDetail = {
       ...modalData,
-      id: modalData.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      id: modalData.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      batchIndex: editingCell.batch,
+      dayIndex: editingCell.day,
+      timeIndex: editingCell.time
     };
-
-    setGridData(prev => {
-      const newData = prev.map(batch => batch.map(day => [...day]));
-      newData[editingCell.batch][editingCell.day][editingCell.time] = classDetail;
-      return newData;
+    setRoutineData(prev => {
+      // Remove any existing class in this cell
+      const filtered = prev.filter(cls =>
+        !(cls.batchIndex === editingCell.batch && cls.dayIndex === editingCell.day && cls.timeIndex === editingCell.time)
+      );
+      return [...filtered, classDetail];
     });
-
     closeModal();
   };
 
   const duplicateClassDetail = (batchIndex, dayIndex, timeIndex) => {
-    const classDetail = gridData[batchIndex][dayIndex][timeIndex];
+    const classDetail = routineData.find(
+      cls => cls.batchIndex === batchIndex && cls.dayIndex === dayIndex && cls.timeIndex === timeIndex
+    );
     if (!classDetail) return;
-
     const duplicatedClass = {
       ...classDetail,
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
-
     setModalData(duplicatedClass);
     setEditingCell(null); // Set to null to indicate this is a new class
     setIsModalOpen(true);
   };
 
   const deleteClassDetail = (batchIndex, dayIndex, timeIndex) => {
-    setGridData(prev => {
-      const newData = prev.map(batch => batch.map(day => [...day]));
-      newData[batchIndex][dayIndex][timeIndex] = null;
-      return newData;
-    });
+    setRoutineData(prev => prev.filter(cls =>
+      !(cls.batchIndex === batchIndex && cls.dayIndex === dayIndex && cls.timeIndex === timeIndex)
+    ));
   };
 
   const getDayColor = (dayIndex) => {
@@ -204,254 +288,65 @@ const ClassRoutineOrganizer = () => {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <div 
-          ref={scrollContainerRef}
-          className="h-full overflow-auto"
-        >
-          <table className="border-collapse">
-            <thead>
-              {/* Day Names Row */}
-              <tr className="sticky top-0 z-20">
-                <th className="w-48 h-12 bg-gray-800 text-white font-semibold text-sm border border-gray-300 sticky left-0 z-30">
-                  Batch / Section
-                </th>
-                {days.map((day, dayIndex) => (
-                  <th 
-                    key={day}
-                    colSpan={9}
-                    className={`h-12 font-semibold text-gray-700 border border-gray-300 ${getDayColor(dayIndex)} ${dayIndex < 4 ? 'border-r-4 border-r-gray-400' : ''}`}
-                  >
-                    {day}
-                  </th>
-                ))}
-              </tr>
-              
-              {/* Time Slots Row */}
-              <tr className="sticky top-12 z-20">
-                <th className="w-48 h-12 bg-gray-700 text-white font-medium text-xs border border-gray-300 sticky left-0 z-30">
-                  Time Slots
-                </th>
-                {days.map((_, dayIndex) =>
-                  timeSlots.map((time, timeIndex) => (
-                    <th
-                      key={`${dayIndex}-${timeIndex}`}
-                      className={`w-32 h-12 text-xs text-gray-600 font-medium border border-gray-200 ${getTimeSlotColor(timeIndex)} ${getDayColor(dayIndex)} ${timeIndex === 8 && dayIndex < 4 ? 'border-r-4 border-r-gray-400' : ''}`}
-                    >
-                      <div className="px-1 text-center">
-                        {time}
-                      </div>
-                    </th>
-                  ))
-                )}
-              </tr>
-            </thead>
-            
-            <tbody>
-              {batches.map((batch, batchIndex) => (
-                <tr key={batchIndex}>
-                  {/* Batch Name Cell */}
-                  <td className={`w-48 h-16 bg-gray-50 text-sm font-medium text-gray-700 border border-gray-200 sticky left-0 z-10 ${(batchIndex + 1) % 3 === 0 ? 'border-b-4 border-b-gray-400' : ''}`}>
-                    <div className="px-4 py-2">
-                      {batch}
-                    </div>
-                  </td>
-                  
-                  {/* Class Cells */}
-                  {days.map((_, dayIndex) =>
-                    timeSlots.map((_, timeIndex) => {
-                      const classDetail = gridData[batchIndex][dayIndex][timeIndex];
-                      const conflicts = classDetail ? getConflicts(batchIndex, dayIndex, timeIndex, classDetail) : [];
-                      const isDragOver = dragOverCell?.batch === batchIndex && 
-                                       dragOverCell?.day === dayIndex && 
-                                       dragOverCell?.time === timeIndex;
-                      
-                      return (
-                        <td
-                          key={`${batchIndex}-${dayIndex}-${timeIndex}`}
-                          className={`w-32 h-16 ${getBorderClasses(batchIndex, dayIndex, timeIndex)} ${getTimeSlotColor(timeIndex)} relative group cursor-pointer transition-all duration-200 ${
-                            isDragOver ? 'bg-blue-100 border-blue-400' : ''
-                          } ${classDetail ? 'hover:shadow-md' : 'hover:bg-gray-100'} ${conflicts.length > 0 ? 'bg-red-50' : ''}`}
-                          onClick={() => openModal(batchIndex, dayIndex, timeIndex)}
-                          onDragOver={(e) => handleDragOver(e, batchIndex, dayIndex, timeIndex)}
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, batchIndex, dayIndex, timeIndex)}
-                        >
-                          {classDetail ? (
-                            <div
-                              className={`h-full p-1 flex flex-col justify-between cursor-move bg-white rounded-sm shadow-sm border hover:shadow-md transition-shadow duration-200 m-0.5 ${conflicts.length > 0 ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, batchIndex, dayIndex, timeIndex)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              {conflicts.length > 0 && (
-                                <div className="absolute -top-1 -right-1 z-10">
-                                  <AlertTriangle className="w-3 h-3 text-red-500" />
-                                </div>
-                              )}
-                              <div className="flex-1 min-h-0">
-                                <div className="text-xs font-semibold text-gray-800 truncate">
-                                  {classDetail.subject}
-                                </div>
-                                <div className="text-xs text-gray-600 truncate">
-                                  {classDetail.teacher}
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">{classDetail.room}</span>
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
-                                  <GripVertical className="w-3 h-3 text-gray-400" />
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      duplicateClassDetail(batchIndex, dayIndex, timeIndex);
-                                    }}
-                                    className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
-                                    title="Duplicate class"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteClassDetail(batchIndex, dayIndex, timeIndex);
-                                    }}
-                                    className="text-red-500 hover:text-red-700 transition-colors duration-200"
-                                    title="Delete class"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="h-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <Plus className="w-4 h-4 text-gray-400" />
-                            </div>
-                          )}
-                        </td>
-                      );
-                    })
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div ref={scrollContainerRef} className="h-full overflow-auto">
+          <ClassRoutineTable
+            batches={batches}
+            days={days}
+            timeSlots={timeSlots}
+            routineData={routineData}
+            getConflicts={getConflicts}
+            dragOverCell={dragOverCell}
+            handleDragOver={handleDragOver}
+            handleDragLeave={handleDragLeave}
+            handleDrop={handleDrop}
+            handleDragStart={handleDragStart}
+            handleDragEnd={handleDragEnd}
+            openModal={openModal}
+            duplicateClassDetail={duplicateClassDetail}
+            deleteClassDetail={deleteClassDetail}
+            getDayColor={getDayColor}
+            getTimeSlotColor={getTimeSlotColor}
+            getBorderClasses={getBorderClasses}
+          />
         </div>
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
+      <ClassModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSave={saveClassDetail}
+        modalData={modalData}
+        setModalData={setModalData}
+        editingCell={editingCell}
+        getConflicts={getConflicts}
+        batches={batches}
+      />
+
+      {/* Move/Copy Modal for drag and drop is commented out for testing */}
+      {/*
+      {isDropModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {editingCell ? 'Edit Class' : 'Add Class'}
-                </h3>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {editingCell && (() => {
-                  const conflicts = getConflicts(editingCell.batch, editingCell.day, editingCell.time, modalData);
-                  return conflicts.length > 0 && (
-                    <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-700">Conflicts Detected</span>
-                      </div>
-                      <div className="text-xs text-red-600 space-y-1">
-                        {conflicts.map((conflict, index) => (
-                          <div key={index}>
-                            {conflict.type === 'teacher' ? 'Teacher' : 'Room'} conflict with {batches[conflict.batch]}: {conflict.class.subject}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    value={modalData.subject}
-                    onChange={(e) => setModalData(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter subject name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Teacher
-                  </label>
-                  <input
-                    type="text"
-                    value={modalData.teacher}
-                    onChange={(e) => setModalData(prev => ({ ...prev, teacher: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter teacher name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Room
-                  </label>
-                  <input
-                    type="text"
-                    value={modalData.room}
-                    onChange={(e) => setModalData(prev => ({ ...prev, room: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter room number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type
-                  </label>
-                  <select
-                    value={modalData.type}
-                    onChange={(e) => setModalData(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="Lecture">Lecture</option>
-                    <option value="Lab">Lab</option>
-                    <option value="Tutorial">Tutorial</option>
-                    <option value="Seminar">Seminar</option>
-                    <option value="Exam">Exam</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveClassDetail}
-                  disabled={!modalData.subject.trim()}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                >
-                  {editingCell ? 'Update' : 'Add'} Class
-                </button>
-              </div>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-xs p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Move or Copy?</h3>
+            <p className="mb-6 text-gray-600">Do you want to move or copy the class to the new cell?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDropAction('move')}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+              >
+                Move
+              </button>
+              <button
+                onClick={() => handleDropAction('copy')}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+              >
+                Copy
+              </button>
             </div>
           </div>
         </div>
       )}
+      */}
     </div>
   );
 };
