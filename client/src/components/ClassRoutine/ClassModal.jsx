@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { GlobalContext } from '../../App';
 
 const ClassModal = ({
   isOpen,
@@ -13,19 +14,8 @@ const ClassModal = ({
 }) => {
   if (!isOpen) return null;
 
-  // Sync teacher, room, and course options with localStorage
-  const teachers = React.useMemo(() => {
-    const saved = localStorage.getItem('routineTeachers');
-    return saved ? JSON.parse(saved) : [];
-  }, []);
-  const rooms = React.useMemo(() => {
-    const saved = localStorage.getItem('routineRooms');
-    return saved ? JSON.parse(saved) : [];
-  }, []);
-  const courses = React.useMemo(() => {
-    const saved = localStorage.getItem('routineCourses');
-    return saved ? JSON.parse(saved) : [];
-  }, []);
+  // Use global state for dropdowns
+  const { teachers, rooms, courses } = useContext(GlobalContext);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

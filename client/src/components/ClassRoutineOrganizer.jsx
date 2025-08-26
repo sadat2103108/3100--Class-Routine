@@ -1,10 +1,17 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import { Settings as SettingsIcon } from 'lucide-react';
 import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
+import { GlobalContext } from '../App';
 
 const ClassRoutineOrganizer = () => {
+  const {
+    routineData,
+    setRoutineData,
+    // Add other global arrays/setters if needed
+  } = useContext(GlobalContext);
+
   const [draggedItem, setDraggedItem] = useState(null);
   const [dropChoice, setDropChoice] = useState(null); // {batchIndex, dayIndex, timeIndex}
   const [isDropModalOpen, setIsDropModalOpen] = useState(false);
@@ -13,7 +20,7 @@ const ClassRoutineOrganizer = () => {
   const [editingCell, setEditingCell] = useState(null);
   const [modalData, setModalData] = useState({
     id: '',
-  course: '',
+    course: '',
     teacher: '',
     room: '',
     type: 'Lecture'
@@ -26,44 +33,12 @@ const ClassRoutineOrganizer = () => {
   ];
   const batches = Array.from({ length: 15 }, (_, i) => `Series ${20 + Math.floor(i / 3)} - Section ${String.fromCharCode(65 + (i % 3))}`);
 
-  // Initialize grid data from localStorage or default
-  const [gridData, setGridData] = useState(() => {
-    const saved = localStorage.getItem('classRoutineGridData');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // fallback to default if corrupted
-      }
-    }
-    return Array(15).fill(null).map(() =>
-      Array(5).fill(null).map(() =>
-        Array(9).fill(null)
-      )
-    );
-  });
-
-  // Save gridData to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('classRoutineGridData', JSON.stringify(gridData));
-  }, [gridData]);
+  // Remove localStorage gridData and routineData
+  // Use global state for routineData
 
   const scrollContainerRef = useRef(null);
 
   // Check for conflicts (same teacher or room in same time slot)
-  const [routineData, setRoutineData] = useState(() => {
-    const saved = localStorage.getItem('classRoutineFlatData');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {}
-    }
-    return [];
-  });
-  useEffect(() => {
-    localStorage.setItem('classRoutineFlatData', JSON.stringify(routineData));
-  }, [routineData]);
-
   const getConflicts = useCallback((batchIndex, dayIndex, timeIndex, currentClass) => {
     const conflicts = [];
     routineData.forEach(cls => {
@@ -158,7 +133,7 @@ const ClassRoutineOrganizer = () => {
     setDraggedItem(null);
     setDropChoice(null);
     setIsDropModalOpen(false);
-  }, [draggedItem]);
+  }, [draggedItem, setRoutineData]);
 
   const handleDropAction = (action) => {
     if (!draggedItem || !dropChoice) {
@@ -217,7 +192,7 @@ const ClassRoutineOrganizer = () => {
     setEditingCell({ batch: batchIndex, day: dayIndex, time: timeIndex });
     setModalData(existingClass || {
       id: '',
-  course: '',
+      course: '',
       teacher: '',
       room: '',
       type: 'Lecture'
@@ -228,7 +203,7 @@ const ClassRoutineOrganizer = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCell(null);
-  setModalData({ id: '', course: '', teacher: '', room: '', type: 'Lecture' });
+    setModalData({ id: '', course: '', teacher: '', room: '', type: 'Lecture' });
   };
 
   const saveClassDetail = () => {
@@ -282,7 +257,6 @@ const ClassRoutineOrganizer = () => {
     // Each day is a group, but you can alternate for more contrast if needed
     return groupColors[dayIndex % groupColors.length];
   };
-
 
   const getBorderClasses = (batchIndex, dayIndex, timeIndex) => {
     let classes = 'border border-gray-200';

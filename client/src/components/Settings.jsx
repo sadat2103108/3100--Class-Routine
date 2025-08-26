@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
+import { GlobalContext } from '../App';
 
 const Settings = ({ onBack }) => {
-  const [teachers, setTeachers] = useState(() => {
-    const saved = localStorage.getItem('routineTeachers');
-    return saved ? JSON.parse(saved) : ['Teacher 1', 'Teacher 2'];
-  });
-  const [rooms, setRooms] = useState(() => {
-    const saved = localStorage.getItem('routineRooms');
-    return saved ? JSON.parse(saved) : ['Room 101', 'Room 102'];
-  });
-  const [courses, setCourses] = useState(() => {
-    const saved = localStorage.getItem('routineCourses');
-    return saved ? JSON.parse(saved) : ['Mathematics', 'Physics'];
-  });
+  const {
+    teachers,
+    setTeachers,
+    rooms,
+    setRooms,
+    courses,
+    setCourses,
+  } = useContext(GlobalContext);
 
   const handleTeachersChange = (e, idx) => {
     const newArr = [...teachers];
@@ -38,10 +35,8 @@ const Settings = ({ onBack }) => {
   const deleteRoom = idx => setRooms(rooms.filter((_, i) => i !== idx));
   const deleteCourse = idx => setCourses(courses.filter((_, i) => i !== idx));
 
+  // SaveSettings can be used to sync with backend if needed
   const saveSettings = () => {
-    localStorage.setItem('routineTeachers', JSON.stringify(teachers.filter(t => t.trim())));
-    localStorage.setItem('routineRooms', JSON.stringify(rooms.filter(r => r.trim())));
-    localStorage.setItem('routineCourses', JSON.stringify(courses.filter(s => s.trim())));
     alert('Settings saved!');
   };
 
