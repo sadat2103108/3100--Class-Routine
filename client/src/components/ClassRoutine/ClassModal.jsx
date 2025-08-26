@@ -13,6 +13,20 @@ const ClassModal = ({
 }) => {
   if (!isOpen) return null;
 
+  // Sync teacher, room, and course options with localStorage
+  const teachers = React.useMemo(() => {
+    const saved = localStorage.getItem('routineTeachers');
+    return saved ? JSON.parse(saved) : [];
+  }, []);
+  const rooms = React.useMemo(() => {
+    const saved = localStorage.getItem('routineRooms');
+    return saved ? JSON.parse(saved) : [];
+  }, []);
+  const courses = React.useMemo(() => {
+    const saved = localStorage.getItem('routineCourses');
+    return saved ? JSON.parse(saved) : [];
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -41,7 +55,7 @@ const ClassModal = ({
                   <div className="text-xs text-red-600 space-y-1">
                     {conflicts.map((conflict, index) => (
                       <div key={index}>
-                        {conflict.type === 'teacher' ? 'Teacher' : 'Room'} conflict with {batches[conflict.batch]}: {conflict.class.subject}
+                        {conflict.type === 'teacher' ? 'Teacher' : 'Room'} conflict with {batches[conflict.batch]}: {conflict.class.course}
                       </div>
                     ))}
                   </div>
@@ -51,15 +65,18 @@ const ClassModal = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Subject
+                Course
               </label>
-              <input
-                type="text"
-                value={modalData.subject}
-                onChange={e => setModalData(prev => ({ ...prev, subject: e.target.value }))}
+              <select
+                value={modalData.course}
+                onChange={e => setModalData(prev => ({ ...prev, course: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter subject name"
-              />
+              >
+                <option value="">Select course</option>
+                {courses.map((course, idx) => (
+                  <option key={idx} value={course}>{course}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -72,15 +89,9 @@ const ClassModal = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select teacher</option>
-                <option value="Dr. Ahmed">Dr. Ahmed</option>
-                <option value="Ms. Rahman">Ms. Rahman</option>
-                <option value="Mr. Chowdhury">Mr. Chowdhury</option>
-                <option value="Dr. Islam">Dr. Islam</option>
-                <option value="Ms. Akter">Ms. Akter</option>
-                <option value="Mr. Hossain">Mr. Hossain</option>
-                <option value="Dr. Karim">Dr. Karim</option>
-                <option value="Ms. Sultana">Ms. Sultana</option>
-                <option value="Guest">Guest</option>
+                {teachers.map((teacher, idx) => (
+                  <option key={idx} value={teacher}>{teacher}</option>
+                ))}
               </select>
             </div>
 
@@ -94,34 +105,13 @@ const ClassModal = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select room</option>
-                <option value="101">101</option>
-                <option value="102">102</option>
-                <option value="201">201</option>
-                <option value="202">202</option>
-                <option value="301">301</option>
-                <option value="302">302</option>
-                <option value="Lab A">Lab A</option>
-                <option value="Lab B">Lab B</option>
-                <option value="Auditorium">Auditorium</option>
+                {rooms.map((room, idx) => (
+                  <option key={idx} value={room}>{room}</option>
+                ))}
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type
-              </label>
-              <select
-                value={modalData.type}
-                onChange={e => setModalData(prev => ({ ...prev, type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="Lecture">Lecture</option>
-                <option value="Lab">Lab</option>
-                <option value="Tutorial">Tutorial</option>
-                <option value="Seminar">Seminar</option>
-                <option value="Exam">Exam</option>
-              </select>
-            </div>
+            {/* Type option removed as requested */}
           </div>
 
           <div className="flex gap-3 mt-6">
@@ -133,7 +123,7 @@ const ClassModal = ({
             </button>
             <button
               onClick={onSave}
-              disabled={!modalData.subject.trim()}
+              disabled={!modalData.course.trim()}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {editingCell ? 'Update' : 'Add'} Class

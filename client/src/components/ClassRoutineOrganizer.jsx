@@ -1,4 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Settings as SettingsIcon } from 'lucide-react';
+import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
 
@@ -11,7 +13,7 @@ const ClassRoutineOrganizer = () => {
   const [editingCell, setEditingCell] = useState(null);
   const [modalData, setModalData] = useState({
     id: '',
-    subject: '',
+  course: '',
     teacher: '',
     room: '',
     type: 'Lecture'
@@ -215,7 +217,7 @@ const ClassRoutineOrganizer = () => {
     setEditingCell({ batch: batchIndex, day: dayIndex, time: timeIndex });
     setModalData(existingClass || {
       id: '',
-      subject: '',
+  course: '',
       teacher: '',
       room: '',
       type: 'Lecture'
@@ -226,7 +228,7 @@ const ClassRoutineOrganizer = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCell(null);
-    setModalData({ id: '', subject: '', teacher: '', room: '', type: 'Lecture' });
+  setModalData({ id: '', course: '', teacher: '', room: '', type: 'Lecture' });
   };
 
   const saveClassDetail = () => {
@@ -295,11 +297,27 @@ const ClassRoutineOrganizer = () => {
     return classes;
   };
 
+  // Simple navigation state for settings page
+  const [showSettings, setShowSettings] = useState(false);
+
+  if (showSettings) {
+    return <SettingsPage onBack={() => setShowSettings(false)} />;
+  }
+
   return (
     <div className="h-screen bg-gray-100 flex flex-col">
-      <div className="bg-white shadow-sm border-b p-4">
-        <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
-        <p className="text-gray-600">Drag and drop classes between time slots. Click cells to add or edit classes.</p>
+      <div className="bg-white shadow-sm border-b p-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
+          <p className="text-gray-600">Drag and drop classes between time slots. Click cells to add or edit classes.</p>
+        </div>
+        <button
+          className="ml-auto p-2 rounded-full hover:bg-gray-200 transition-colors"
+          title="Settings"
+          onClick={() => setShowSettings(true)}
+        >
+          <SettingsIcon className="w-6 h-6 text-gray-600" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden">
