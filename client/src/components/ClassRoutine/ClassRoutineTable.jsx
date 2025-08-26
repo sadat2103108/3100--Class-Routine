@@ -17,16 +17,30 @@ const ClassRoutineTable = ({
   duplicateClassDetail,
   deleteClassDetail,
   getDayColor,
-  getTimeSlotColor,
   getBorderClasses
 }) => {
+  // Helper for column group color (office style with pop accent)
+  const getColumnGroupColor = (timeIndex) => {
+    const group = Math.floor(timeIndex / 3);
+    if (group === 0) return 'bg-blue-100';     // columns 1-3 office blue
+    if (group === 1) return 'bg-lime-100';     // columns 4-6 office green
+    return 'bg-blue-200';                    // columns 7-9 pop accent
+  };
+
+  // Helper for batch/section row color
+  const getBatchRowColor = (batchIndex) => {
+    // Every 3 rows, alternate color
+    const group = Math.floor(batchIndex / 3);
+    return group % 2 === 0 ? 'bg-white' : 'bg-blue-50';
+  };
+
   return (
-    <table className="border-collapse">
+  <table className="border-separate border-spacing-0">
       <thead>
         {/* Day Names Row */}
         <tr className="sticky top-0 z-20">
           <th className="w-48 h-12 bg-gray-800 text-white font-semibold text-sm border border-gray-300 sticky left-0 z-30">
-            Batch / Section
+            Series-Section
           </th>
           {days.map((day, dayIndex) => (
             <th
@@ -47,7 +61,7 @@ const ClassRoutineTable = ({
             timeSlots.map((time, timeIndex) => (
               <th
                 key={`${dayIndex}-${timeIndex}`}
-                className={`w-32 h-12 text-xs text-gray-600 font-medium border border-gray-200 ${getTimeSlotColor(timeIndex)} ${getDayColor(dayIndex)} ${timeIndex === 8 && dayIndex < 4 ? 'border-r-4 border-r-gray-400' : ''}`}
+                className={`w-32 h-12 text-xs text-gray-600 font-medium border-2 border-gray-300 ${getDayColor(dayIndex)} ${getColumnGroupColor(timeIndex)} ${timeIndex === 8 && dayIndex < 4 ? 'border-r-4 border-r-gray-400' : ''}`}
               >
                 <div className="px-1 text-center">
                   {time}
@@ -61,7 +75,7 @@ const ClassRoutineTable = ({
         {batches.map((batch, batchIndex) => (
           <tr key={batchIndex}>
             {/* Batch Name Cell */}
-            <td className={`w-48 h-16 bg-gray-50 text-sm font-medium text-gray-700 border border-gray-200 sticky left-0 z-10 ${(batchIndex + 1) % 3 === 0 ? 'border-b-4 border-b-gray-400' : ''}`}>
+            <td className={`w-48 h-16 text-sm font-medium text-gray-700 border-2 border-gray-300 sticky left-0 z-10 ${getBatchRowColor(batchIndex)} ${(batchIndex + 1) % 3 === 0 ? 'border-b-4 border-b-gray-400' : ''}`}>
               <div className="px-4 py-2">
                 {batch}
               </div>
@@ -94,7 +108,7 @@ const ClassRoutineTable = ({
                     dayIndex={dayIndex}
                     timeIndex={timeIndex}
                     borderClasses={getBorderClasses(batchIndex, dayIndex, timeIndex)}
-                    timeSlotColor={getTimeSlotColor(timeIndex)}
+                    timeSlotColor={`${getColumnGroupColor(timeIndex)} ${getBatchRowColor(batchIndex)}`}
                   />
                 );
               })

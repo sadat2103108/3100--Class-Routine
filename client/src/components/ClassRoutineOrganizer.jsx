@@ -22,7 +22,7 @@ const ClassRoutineOrganizer = () => {
     '8:00-8:50', '8:50-9:40', '9:40-10:30', '10:50-11:40', '11:40-12:30',
     '12:30-1:20', '2:30-3:20', '3:20-4:10', '4:10-5:00'
   ];
-  const batches = Array.from({ length: 15 }, (_, i) => `Batch ${Math.floor(i / 3) + 1} - Section ${String.fromCharCode(65 + (i % 3))}`);
+  const batches = Array.from({ length: 15 }, (_, i) => `Series ${20 + Math.floor(i / 3)} - Section ${String.fromCharCode(65 + (i % 3))}`);
 
   // Initialize grid data from localStorage or default
   const [gridData, setGridData] = useState(() => {
@@ -248,35 +248,30 @@ const ClassRoutineOrganizer = () => {
     ));
   };
 
+  // Color for each group of 3 columns (sections)
   const getDayColor = (dayIndex) => {
-    const colors = [
+    const groupColors = [
       'bg-blue-50 border-blue-200',
       'bg-green-50 border-green-200',
       'bg-purple-50 border-purple-200',
       'bg-orange-50 border-orange-200',
       'bg-pink-50 border-pink-200'
     ];
-    return colors[dayIndex];
+    // Each day is a group, but you can alternate for more contrast if needed
+    return groupColors[dayIndex % groupColors.length];
   };
 
-  const getTimeSlotColor = (timeIndex) => {
-    if (timeIndex === 3) return 'bg-yellow-50'; // Break time highlight
-    return timeIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
-  };
 
   const getBorderClasses = (batchIndex, dayIndex, timeIndex) => {
     let classes = 'border border-gray-200';
-    
     // Add thicker borders for day separations (every 9 columns)
     if (timeIndex === 8) {
       classes += ' border-r-4 border-r-gray-400';
     }
-    
     // Add thicker borders for batch group separations (every 3 rows)
     if ((batchIndex + 1) % 3 === 0) {
       classes += ' border-b-4 border-b-gray-400';
     }
-    
     return classes;
   };
 
@@ -305,7 +300,6 @@ const ClassRoutineOrganizer = () => {
             duplicateClassDetail={duplicateClassDetail}
             deleteClassDetail={deleteClassDetail}
             getDayColor={getDayColor}
-            getTimeSlotColor={getTimeSlotColor}
             getBorderClasses={getBorderClasses}
           />
         </div>
@@ -321,32 +315,6 @@ const ClassRoutineOrganizer = () => {
         getConflicts={getConflicts}
         batches={batches}
       />
-
-      {/* Move/Copy Modal for drag and drop is commented out for testing */}
-      {/*
-      {isDropModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-xs p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Move or Copy?</h3>
-            <p className="mb-6 text-gray-600">Do you want to move or copy the class to the new cell?</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleDropAction('move')}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
-              >
-                Move
-              </button>
-              <button
-                onClick={() => handleDropAction('copy')}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      */}
     </div>
   );
 };
