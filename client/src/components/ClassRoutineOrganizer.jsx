@@ -17,10 +17,10 @@ const ClassRoutineOrganizer = () => {
     type: 'Lecture'
   });
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
   const timeSlots = [
     '8:00-8:50', '8:50-9:40', '9:40-10:30', '10:50-11:40', '11:40-12:30',
-    '12:30-1:20', '2:20-3:10', '3:10-4:00', '4:00-4:50'
+    '12:30-1:20', '2:30-3:20', '3:20-4:10', '4:10-5:00'
   ];
   const batches = Array.from({ length: 15 }, (_, i) => `Batch ${Math.floor(i / 3) + 1} - Section ${String.fromCharCode(65 + (i % 3))}`);
 
