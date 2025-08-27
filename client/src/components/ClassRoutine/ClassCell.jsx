@@ -22,9 +22,12 @@ const ClassCell = ({
 }) => {
   return (
     <td
-      className={`w-32 h-16 ${borderClasses} ${timeSlotColor} relative group cursor-pointer transition-all duration-200 ${
-        isDragOver ? 'bg-blue-100 border-blue-400' : ''
-      } ${classDetail ? 'hover:shadow-md' : 'hover:bg-gray-100'} ${conflicts.length > 0 ? 'bg-red-50' : ''}`}
+      className={`w-32 h-16 ${borderClasses} ${timeSlotColor} relative group cursor-pointer transition-all duration-200
+        ${isDragOver ? 'bg-blue-100 border-blue-400' : ''}
+        ${classDetail ? 'hover:shadow-md' : 'hover:bg-blue-200'}
+        ${conflicts.length > 0 ? 'bg-red-50' : ''}
+        ${!classDetail ? 'bg-white' : ''}
+      `}
       onClick={onClick}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}

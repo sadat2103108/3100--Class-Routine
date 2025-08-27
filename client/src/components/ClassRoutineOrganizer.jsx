@@ -290,14 +290,14 @@ const ClassRoutineOrganizer = () => {
   };
 
   const getBorderClasses = (batchIndex, dayIndex, timeIndex) => {
-    let classes = 'border border-gray-200';
+    let classes = 'border border-gray-500';
     // Add thicker borders for day separations (every 9 columns)
     if (timeIndex === 8) {
-      classes += ' border-r-4 border-r-gray-400';
+      classes += ' border-r-4 border-r-red-400';
     }
     // Add thicker borders for batch group separations (every 3 rows)
     if ((batchIndex + 1) % 3 === 0) {
-      classes += ' border-b-4 border-b-gray-400';
+      classes += ' border-b-4 border-b-yellow-400';
     }
     return classes;
   };
@@ -322,19 +322,19 @@ const ClassRoutineOrganizer = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-100 flex flex-col">
-      <div className="bg-white shadow-sm border-b p-4 flex items-center justify-between">
+    <div className="h-screen bg-gray-50 flex flex-col">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
-          <p className="text-gray-600">Drag and drop classes between time slots. Click cells to add or edit classes.</p>
+          <p className="text-gray-500">Drag and drop classes between time slots. Click cells to add or edit classes.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Status Icon */}
-          {saveStatus === 'syncing' && <Loader2 className="w-5 h-5 text-blue-500 animate-spin" title="Syncing..." />}
-          {saveStatus === 'saved' && <CheckCircle2 className="w-5 h-5 text-green-500" title="Saved" />}
-          {saveStatus === 'unsaved' && <AlertCircle className="w-5 h-5 text-yellow-500" title="Unsaved changes" />}
+          {saveStatus === 'syncing' && <Loader2 className="w-5 h-5 text-blue-400 animate-spin" title="Syncing..." />}
+          {saveStatus === 'saved' && <CheckCircle2 className="w-5 h-5 text-green-400" title="Saved" />}
+          {saveStatus === 'unsaved' && <AlertCircle className="w-5 h-5 text-yellow-400" title="Unsaved changes" />}
           <button
-            className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors"
+            className="ml-2 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
             title="Settings"
             onClick={() => setShowSettings(true)}
           >
@@ -342,7 +342,6 @@ const ClassRoutineOrganizer = () => {
           </button>
         </div>
       </div>
-
       <div className="flex-1 overflow-hidden">
         <div ref={scrollContainerRef} className="h-full overflow-auto">
           <ClassRoutineTable
@@ -365,7 +364,6 @@ const ClassRoutineOrganizer = () => {
           />
         </div>
       </div>
-
       <ClassModal
         isOpen={isModalOpen}
         onClose={closeModal}
