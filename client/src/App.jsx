@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useCallback } from 'react';
 import ClassRoutineOrganizer from './components/ClassRoutineOrganizer';
 
 export const GlobalContext = createContext();
@@ -10,6 +10,7 @@ function App() {
   const [courses, setCourses] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [routineData, setRoutineData] = useState([]);
+
 
   // Fetch initial data from backend
   useEffect(() => {
@@ -79,16 +80,16 @@ function App() {
 
   // Provide saveSettings for Settings page
   const contextValue = {
-    teachers,
-    // setTeachers,
-    courses,
-    // setCourses,
-    rooms,
-    // setRooms,
-    routineData,
-    setRoutineData,
-    saveAllStates,
-  };
+  teachers,
+  setTeachers,    
+  courses,
+  setCourses,     
+  rooms,
+  setRooms,
+  routineData,
+  setRoutineData,
+  saveAllStates,
+};
 
   return (
     <GlobalContext.Provider value={contextValue}>
