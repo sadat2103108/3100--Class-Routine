@@ -257,10 +257,10 @@ const ClassRoutineOrganizer = () => {
 
   const handleDownload = async () => {
 
-        
+
     try {
 
-      await downloadRoutinePDF(batches,timeSlots);
+      await downloadRoutinePDF(batches, timeSlots);
     } catch (err) {
       console.error("Failed to download PDF:", err);
     }
@@ -289,44 +289,45 @@ const ClassRoutineOrganizer = () => {
     <div className="h-screen bg-gray-50 flex flex-col">
 
 
+      <div className="bg-gray-900 shadow-sm border-b border-gray-700 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Logo */}
+          <img src="/logo.jpg" alt="Logo" className="w-12 h-12 object-contain" />
 
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
-          <p className="text-gray-500">Drag and drop classes between time slots. Click cells to add or edit classes.
-            <strong> CTRL+Drag </strong> to duplicate
-          </p>
+          {/* Title */}
+          <div>
+            <h1 className="text-2xl font-bold font-rubik text-white">ROUTINE PLANNER</h1>
+            {/* Optional description */}
+            {/* <p className="text-gray-400">Drag & drop classes. CTRL+Drag to duplicate</p> */}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
-
           {/* Status Icon */}
           {saveStatus === 'syncing' && <Loader2 className="w-5 h-5 text-blue-400 animate-spin" title="Syncing..." />}
           {saveStatus === 'saved' && <CheckCircle2 className="w-5 h-5 text-green-400" title="Saved" />}
           {saveStatus === 'unsaved' && <AlertCircle className="w-5 h-5 text-yellow-400" title="Unsaved changes" />}
-          
-          
-          
+
           {/* Download button */}
           <button
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
+            className="p-2 rounded-full hover:bg-gray-800 transition-colors border border-gray-700"
             title="Download Routine"
             onClick={handleDownload}
           >
-            <Download className="w-5 h-5 text-gray-600" />
+            <Download className="w-5 h-5 text-gray-200" />
           </button>
 
           {/* Settings button */}
           <button
-            className="ml-2 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
+            className="ml-2 p-2 rounded-full hover:bg-gray-800 transition-colors border border-gray-700"
             title="Settings"
             onClick={() => setShowSettings(true)}
           >
-            <SettingsIcon className="w-6 h-6 text-gray-600" />
+            <SettingsIcon className="w-6 h-6 text-gray-200" />
           </button>
-
         </div>
       </div>
+
 
 
 
