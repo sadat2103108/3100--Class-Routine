@@ -16,7 +16,7 @@ const ClassRoutineTable = ({
   openModal,
   duplicateClassDetail,
   deleteClassDetail,
-  getDayColor,
+  // getDayColor,
   getBorderClasses
 }) => {
   // Helper for column group color (light matte aesthetic, with soft dark for columns 4,5,6)

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
+import { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import { Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
@@ -10,11 +10,11 @@ const ClassRoutineOrganizer = () => {
     routineData,
     setRoutineData,
     teachers,
-    setTeachers,
+    // setTeachers,
     courses,
-    setCourses,
+    // setCourses,
     rooms,
-    setRooms,
+    // setRooms,
     saveAllStates,
   } = useContext(GlobalContext);
 
@@ -29,12 +29,15 @@ const ClassRoutineOrganizer = () => {
   // Sync every 10s and on settings save
   useEffect(() => {
     const interval = setInterval(async () => {
-      setSaveStatus('syncing');
-      await saveAllStates();
-      setSaveStatus('saved');
-    }, 10000);
+      if (saveStatus !== 'saved') {   // Only sync if not already saved
+        setSaveStatus('syncing');
+        await saveAllStates();
+        setSaveStatus('saved');
+      }
+    }, 5000);
+
     return () => clearInterval(interval);
-  }, [saveAllStates]);
+  }, [saveStatus, saveAllStates]);
 
   // Expose manual save for settings page
   const handleManualSave = async () => {
@@ -53,8 +56,7 @@ const ClassRoutineOrganizer = () => {
     id: '',
     course: '',
     teacher: '',
-    room: '',
-    type: 'Lecture'
+    room: ''
   });
 
   const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
@@ -62,8 +64,23 @@ const ClassRoutineOrganizer = () => {
     '8:00-8:50', '8:50-9:40', '9:40-10:30', '10:50-11:40', '11:40-12:30',
     '12:30-1:20', '2:30-3:20', '3:20-4:10', '4:10-5:00'
   ];
-  const batches = Array.from({ length: 15 }, (_, i) => `Series ${20 + Math.floor(i / 3)} - Section ${String.fromCharCode(65 + (i % 3))}`);
-
+  const batches = [
+    "Series 20 - Section A",
+    "Series 20 - Section B",
+    "Series 20 - Section C",
+    "Series 21 - Section A",
+    "Series 21 - Section B",
+    "Series 21 - Section C",
+    "Series 22 - Section A",
+    "Series 22 - Section B",
+    "Series 22 - Section C",
+    "Series 23 - Section A",
+    "Series 23 - Section B",
+    "Series 23 - Section C",
+    "Series 24 - Section A",
+    "Series 24 - Section B",
+    "Series 24 - Section C"
+  ];
   // Remove localStorage gridData and routineData
   // Use global state for routineData
 
@@ -166,48 +183,48 @@ const ClassRoutineOrganizer = () => {
     setIsDropModalOpen(false);
   }, [draggedItem, setRoutineData]);
 
-  const handleDropAction = (action) => {
-    if (!draggedItem || !dropChoice) {
-      setIsDropModalOpen(false);
-      setDraggedItem(null);
-      setDropChoice(null);
-      setDragOverCell(null);
-      return;
-    }
-    setRoutineData(prev => {
-      let newData = [...prev];
-      // Remove any class in the target cell
-      newData = newData.filter(cls =>
-        !(cls.batchIndex === dropChoice.batchIndex &&
-          cls.dayIndex === dropChoice.dayIndex &&
-          cls.timeIndex === dropChoice.timeIndex)
-      );
-      if (action === 'move') {
-        // Remove from original position
-        newData = newData.filter(cls =>
-          !(cls.batchIndex === draggedItem.batchIndex &&
-            cls.dayIndex === draggedItem.dayIndex &&
-            cls.timeIndex === draggedItem.timeIndex)
-        );
-        // Add to new position
-        newData.push({ ...draggedItem.classDetail, batchIndex: dropChoice.batchIndex, dayIndex: dropChoice.dayIndex, timeIndex: dropChoice.timeIndex });
-      } else if (action === 'copy') {
-        // Add a copy to new position
-        newData.push({
-          ...draggedItem.classDetail,
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          batchIndex: dropChoice.batchIndex,
-          dayIndex: dropChoice.dayIndex,
-          timeIndex: dropChoice.timeIndex
-        });
-      }
-      return newData;
-    });
-    setIsDropModalOpen(false);
-    setDraggedItem(null);
-    setDropChoice(null);
-    setDragOverCell(null);
-  };
+  // const handleDropAction = (action) => {
+  //   if (!draggedItem || !dropChoice) {
+  //     setIsDropModalOpen(false);
+  //     setDraggedItem(null);
+  //     setDropChoice(null);
+  //     setDragOverCell(null);
+  //     return;
+  //   }
+  //   setRoutineData(prev => {
+  //     let newData = [...prev];
+  //     // Remove any class in the target cell
+  //     newData = newData.filter(cls =>
+  //       !(cls.batchIndex === dropChoice.batchIndex &&
+  //         cls.dayIndex === dropChoice.dayIndex &&
+  //         cls.timeIndex === dropChoice.timeIndex)
+  //     );
+  //     if (action === 'move') {
+  //       // Remove from original position
+  //       newData = newData.filter(cls =>
+  //         !(cls.batchIndex === draggedItem.batchIndex &&
+  //           cls.dayIndex === draggedItem.dayIndex &&
+  //           cls.timeIndex === draggedItem.timeIndex)
+  //       );
+  //       // Add to new position
+  //       newData.push({ ...draggedItem.classDetail, batchIndex: dropChoice.batchIndex, dayIndex: dropChoice.dayIndex, timeIndex: dropChoice.timeIndex });
+  //     } else if (action === 'copy') {
+  //       // Add a copy to new position
+  //       newData.push({
+  //         ...draggedItem.classDetail,
+  //         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  //         batchIndex: dropChoice.batchIndex,
+  //         dayIndex: dropChoice.dayIndex,
+  //         timeIndex: dropChoice.timeIndex
+  //       });
+  //     }
+  //     return newData;
+  //   });
+  //   setIsDropModalOpen(false);
+  //   setDraggedItem(null);
+  //   setDropChoice(null);
+  //   setDragOverCell(null);
+  // };
 
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);
@@ -277,17 +294,17 @@ const ClassRoutineOrganizer = () => {
   };
 
   // Color for each group of 3 columns (sections)
-  const getDayColor = (dayIndex) => {
-    const groupColors = [
-      'bg-blue-50 border-blue-200',
-      'bg-green-50 border-green-200',
-      'bg-purple-50 border-purple-200',
-      'bg-orange-50 border-orange-200',
-      'bg-pink-50 border-pink-200'
-    ];
-    // Each day is a group, but you can alternate for more contrast if needed
-    return groupColors[dayIndex % groupColors.length];
-  };
+  // const getDayColor = (dayIndex) => {
+  //   const groupColors = [
+  //     'bg-blue-50 border-blue-200',
+  //     'bg-green-50 border-green-200',
+  //     'bg-purple-50 border-purple-200',
+  //     'bg-orange-50 border-orange-200',
+  //     'bg-pink-50 border-pink-200'
+  //   ];
+  //   // Each day is a group, but you can alternate for more contrast if needed
+  //   return groupColors[dayIndex % groupColors.length];
+  // };
 
   const getBorderClasses = (batchIndex, dayIndex, timeIndex) => {
     let classes = 'border border-gray-500';
@@ -359,7 +376,7 @@ const ClassRoutineOrganizer = () => {
             openModal={openModal}
             duplicateClassDetail={duplicateClassDetail}
             deleteClassDetail={deleteClassDetail}
-            getDayColor={getDayColor}
+            // getDayColor={getDayColor}
             getBorderClasses={getBorderClasses}
           />
         </div>

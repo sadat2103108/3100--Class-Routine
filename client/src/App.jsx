@@ -80,11 +80,11 @@ function App() {
   // Provide saveSettings for Settings page
   const contextValue = {
     teachers,
-    setTeachers,
+    // setTeachers,
     courses,
-    setCourses,
+    // setCourses,
     rooms,
-    setRooms,
+    // setRooms,
     routineData,
     setRoutineData,
     saveAllStates,
