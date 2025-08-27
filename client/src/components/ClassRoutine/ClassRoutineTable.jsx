@@ -1,4 +1,3 @@
-import React from 'react';
 import ClassCell from './ClassCell';
 
 const ClassRoutineTable = ({
@@ -16,7 +15,6 @@ const ClassRoutineTable = ({
   openModal,
   duplicateClassDetail,
   deleteClassDetail,
-  // getDayColor,
   getBorderClasses
 }) => {
   // Helper for column group color (light matte aesthetic, with soft dark for columns 4,5,6)
@@ -48,7 +46,7 @@ const ClassRoutineTable = ({
     'bg-pink-100'
   ];
   // Colors for series name heading column (group of 3)
-  const seriesHeadingColors = [
+  const batchHeadingColors = [
     'bg-blue-50',
     'bg-green-50',
     'bg-yellow-50',
@@ -61,14 +59,14 @@ const ClassRoutineTable = ({
       <thead>
         {/* Day Names Row */}
         <tr className="sticky top-0 z-20">
-          <th className="w-48 h-12 bg-gray-100 text-gray-800 font-semibold text-sm border border-gray-300 sticky left-0 z-30">
+          <th className="w-48 h-12 bg-gray-100 text-gray-800 font-semibold text-sm border border-r-gray-500 sticky left-0 z-30">
             Days
           </th>
           {days.map((day, dayIndex) => (
             <th
               key={day}
               colSpan={9}
-              className={`h-12 font-semibold text-gray-700 border border-gray-300 ${dayHeadingColors[dayIndex % dayHeadingColors.length]} ${dayIndex < 4 ? 'border-r-4 border-r-red-500' : ''}`}
+              className={` h-12 font-semibold text-lg text-gray-500 border border-gray-300 ${dayHeadingColors[dayIndex % dayHeadingColors.length]} ${dayIndex < 4 ? 'border-r-4 border-r-red-500' : ''}`}
             >
               {day}
             </th>
@@ -76,16 +74,16 @@ const ClassRoutineTable = ({
         </tr>
         {/* Time Slots Row */}
         <tr className="sticky top-12 z-20">
-          <th className="w-48 h-12 bg-gray-200 text-gray-800 font-medium text-xs border border-gray-300 sticky left-0 z-30">
+          <th className="w-48 h-12 bg-gray-200 text-gray-800 font-medium text-sm border border-gray-300 sticky left-0 z-30">
             Time Slots
           </th>
           {days.map((_, dayIndex) =>
             timeSlots.map((time, timeIndex) => (
               <th
                 key={`${dayIndex}-${timeIndex}`}
-                className={`w-32 h-12 text-xs text-gray-600 font-medium border border-gray-500 ${getColumnGroupColor(timeIndex)} ${timeIndex === 8 && dayIndex < 4 ? 'border-r-4 border-r-red-500' : ''}`}
+                className={`w-38 h-12 text-sm text-gray-600 font-medium border border-gray-500 ${getColumnGroupColor(timeIndex)} ${timeIndex === 8 && dayIndex < 4 ? 'border-r-4 border-r-red-500' : ''}`}
               >
-                <div className="px-1 text-center">
+                <div className="px-4 text-center">
                   {time}
                 </div>
               </th>
@@ -96,12 +94,23 @@ const ClassRoutineTable = ({
       <tbody>
         {batches.map((batch, batchIndex) => (
           <tr key={batchIndex}>
+            
             {/* Batch Name Cell */}
-            <td className={`w-48 h-16 text-sm font-medium text-gray-700 border-2 border-gray-300 sticky left-0 z-10 ${seriesHeadingColors[Math.floor(batchIndex / 3) % seriesHeadingColors.length]} ${(batchIndex + 1) % 3 === 0 ? 'border-b-4 border-b-gray-300' : ''}`}>
+            <td
+              className={
+                `w-48 h-16 text-sm font-bold text-gray-800 border-2 
+                border-gray-300 sticky left-0 z-10  
+                ${batchHeadingColors[Math.floor(batchIndex / 3) % batchHeadingColors.length]} 
+                ${(batchIndex + 1) % 3 === 0 ? 'border-b-4 border-b-gray-300' : ''} 
+                whitespace-nowrap overflow-hidden text-ellipsis`
+              }
+            >
               <div className="px-4 py-2">
                 {batch}
               </div>
             </td>
+
+
             {/* Class Cells */}
             {days.map((_, dayIndex) =>
               timeSlots.map((_, timeIndex) => {
@@ -131,7 +140,7 @@ const ClassRoutineTable = ({
                     batchIndex={batchIndex}
                     dayIndex={dayIndex}
                     timeIndex={timeIndex}
-                    borderClasses={getBorderClasses(batchIndex, dayIndex, timeIndex)}
+                    borderClasses={getBorderClasses(batchIndex, timeIndex)}
                     timeSlotColor={cellColor}
                   />
                 );
