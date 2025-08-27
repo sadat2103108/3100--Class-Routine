@@ -4,6 +4,7 @@ import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
 import { GlobalContext } from '../App';
+import { downloadRoutinePDF } from '../util/download';
 
 const ClassRoutineOrganizer = () => {
   const {
@@ -254,6 +255,17 @@ const ClassRoutineOrganizer = () => {
     return classes;
   };
 
+  const handleDownload = async () => {
+
+        
+    try {
+
+      await downloadRoutinePDF(batches,timeSlots);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+    }
+  };
+
   // Simple navigation state for settings page
   const [showSettings, setShowSettings] = useState(false);
 
@@ -296,13 +308,13 @@ const ClassRoutineOrganizer = () => {
           
           
           {/* Download button */}
-          {/* <button
+          <button
             className="p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
             title="Download Routine"
-            onClick={() => {}}
+            onClick={handleDownload}
           >
             <Download className="w-5 h-5 text-gray-600" />
-          </button> */}
+          </button>
 
           {/* Settings button */}
           <button

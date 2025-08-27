@@ -8,7 +8,6 @@ const RoutineClassSchema = new mongoose.Schema({
   course: String,
   teacher: String,
   room: String,
-  // type: String,
 }, { _id: false });
 
 const RoutineSchema = new mongoose.Schema({
