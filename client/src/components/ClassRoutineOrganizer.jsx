@@ -4,9 +4,17 @@ import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
 import { GlobalContext } from '../App';
-import { downloadRoutinePDF } from '../util/download';
+import { downloadRoutinePDF } from '../utils/download';
+import { days, sections, semesters, timeSlots } from '../utils/changables';
+
+
+
 
 const ClassRoutineOrganizer = () => {
+
+
+  /// LOAD CONTEXTS 
+
   const {
     routineData,
     setRoutineData,
@@ -16,18 +24,25 @@ const ClassRoutineOrganizer = () => {
     saveAllStates,
   } = useContext(GlobalContext);
 
-  // Status: 'saved', 'unsaved', 'syncing'
+  /// /////////////////////
+
+  const batches = semesters.flatMap(s =>
+      sections.map(sec => `${s} - Section ${sec}`)
+    );
+
+
+
+  /// AUTO SAVING /////////////////
+
   const [saveStatus, setSaveStatus] = useState('saved');
 
-  // Track changes to global state
   useEffect(() => {
     setSaveStatus('unsaved');
   }, [routineData, teachers, courses, rooms]);
 
-  // Sync every 5s and on settings save
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (saveStatus !== 'saved') {   // Only sync if not already saved
+      if (saveStatus !== 'saved') { 
         setSaveStatus('syncing');
         await saveAllStates();
         setSaveStatus('saved');
@@ -37,12 +52,17 @@ const ClassRoutineOrganizer = () => {
     return () => clearInterval(interval);
   }, [saveStatus, saveAllStates]);
 
-  // Expose manual save for settings page
   const handleManualSave = async () => {
     setSaveStatus('syncing');
     await saveAllStates();
     setSaveStatus('saved');
   };
+
+  /// ////////////////////////////
+
+
+
+
 
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverCell, setDragOverCell] = useState(null);
@@ -54,28 +74,6 @@ const ClassRoutineOrganizer = () => {
     teacher: '',
     room: ''
   });
-
-  const days = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
-  const timeSlots = [
-    '8:00-8:50', '8:50-9:40', '9:40-10:30', '10:50-11:40', '11:40-12:30',
-    '12:30-1:20', '2:30-3:20', '3:20-4:10', '4:10-5:00'
-  ];
-
-  const semesters = [
-    "1st Year Odd",
-    "1st Year Even",
-    "2nd Year Odd",
-    "3rd Year Even",
-    "4th Year Odd"
-  ];
-  const sections = ['A', 'B', 'C'];
-
-  const batches = semesters.flatMap(s =>
-    sections.map(sec => `${s} - Section ${sec}`)
-  );
-
-  // Remove localStorage gridData and routineData
-  // Use global state for routineData
 
   const scrollContainerRef = useRef(null);
 
