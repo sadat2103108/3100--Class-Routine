@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
@@ -9,8 +9,39 @@ const ClassRoutineOrganizer = () => {
   const {
     routineData,
     setRoutineData,
-    // Add other global arrays/setters if needed
+    teachers,
+    setTeachers,
+    courses,
+    setCourses,
+    rooms,
+    setRooms,
+    saveAllStates,
   } = useContext(GlobalContext);
+
+  // Status: 'saved', 'unsaved', 'syncing'
+  const [saveStatus, setSaveStatus] = useState('saved');
+
+  // Track changes to global state
+  useEffect(() => {
+    setSaveStatus('unsaved');
+  }, [routineData, teachers, courses, rooms]);
+
+  // Sync every 10s and on settings save
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      setSaveStatus('syncing');
+      await saveAllStates();
+      setSaveStatus('saved');
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [saveAllStates]);
+
+  // Expose manual save for settings page
+  const handleManualSave = async () => {
+    setSaveStatus('syncing');
+    await saveAllStates();
+    setSaveStatus('saved');
+  };
 
   const [draggedItem, setDraggedItem] = useState(null);
   const [dropChoice, setDropChoice] = useState(null); // {batchIndex, dayIndex, timeIndex}
@@ -274,8 +305,20 @@ const ClassRoutineOrganizer = () => {
   // Simple navigation state for settings page
   const [showSettings, setShowSettings] = useState(false);
 
+  // Listen for Ctrl+S to trigger manual save
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleManualSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleManualSave]);
+
   if (showSettings) {
-    return <SettingsPage onBack={() => setShowSettings(false)} />;
+    return <SettingsPage onBack={() => setShowSettings(false)} onManualSave={handleManualSave} />;
   }
 
   return (
@@ -285,13 +328,19 @@ const ClassRoutineOrganizer = () => {
           <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
           <p className="text-gray-600">Drag and drop classes between time slots. Click cells to add or edit classes.</p>
         </div>
-        <button
-          className="ml-auto p-2 rounded-full hover:bg-gray-200 transition-colors"
-          title="Settings"
-          onClick={() => setShowSettings(true)}
-        >
-          <SettingsIcon className="w-6 h-6 text-gray-600" />
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Status Icon */}
+          {saveStatus === 'syncing' && <Loader2 className="w-5 h-5 text-blue-500 animate-spin" title="Syncing..." />}
+          {saveStatus === 'saved' && <CheckCircle2 className="w-5 h-5 text-green-500" title="Saved" />}
+          {saveStatus === 'unsaved' && <AlertCircle className="w-5 h-5 text-yellow-500" title="Unsaved changes" />}
+          <button
+            className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="Settings"
+            onClick={() => setShowSettings(true)}
+          >
+            <SettingsIcon className="w-6 h-6 text-gray-600" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">

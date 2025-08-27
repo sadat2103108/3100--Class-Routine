@@ -1,22 +1,75 @@
 
-import React, { createContext, useState, useEffect } from 'react';
+
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import ClassRoutineOrganizer from './components/ClassRoutineOrganizer';
 
 export const GlobalContext = createContext();
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || '';
+
 function App() {
-  // Example global state, replace with your actual state and fetching logic
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [routineData, setRoutineData] = useState([]);
 
-  // Example: fetch global arrays from backend here
+  // Fetch initial data from backend
   useEffect(() => {
-    // fetch('/api/settings').then(...)
-    // fetch('/api/routine').then(...)
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/settings`);
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        setTeachers(data.teachers || []);
+        setCourses(data.courses || []);
+        setRooms(data.rooms || []);
+      } catch {
+        setTeachers([]);
+        setCourses([]);
+        setRooms([]);
+      }
+    };
+    const fetchRoutine = async () => {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/routine`);
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        setRoutineData(data.routineData || []);
+      } catch {
+        setRoutineData([]);
+      }
+    };
+    fetchSettings();
+    fetchRoutine();
   }, []);
 
+  // Save states to backend every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      saveAllStates();
+    }, 10000);
+    return () => clearInterval(interval);
+  });
+
+  // Save all states to backend
+  const saveAllStates = useCallback(async () => {
+    try {
+      await fetch(`${SERVER_URL}/api/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teachers, courses, rooms })
+      });
+    } catch {}
+    try {
+      await fetch(`${SERVER_URL}/api/routine`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routineData })
+      });
+    } catch {}
+  }, [teachers, courses, rooms, routineData]);
+
+  // Provide saveSettings for Settings page
   const contextValue = {
     teachers,
     setTeachers,
@@ -26,6 +79,7 @@ function App() {
     setRooms,
     routineData,
     setRoutineData,
+    saveAllStates,
   };
 
   return (

@@ -9,6 +9,7 @@ const Settings = ({ onBack }) => {
     setRooms,
     courses,
     setCourses,
+    saveAllStates,
   } = useContext(GlobalContext);
 
   const handleTeachersChange = (e, idx) => {
@@ -35,8 +36,9 @@ const Settings = ({ onBack }) => {
   const deleteRoom = idx => setRooms(rooms.filter((_, i) => i !== idx));
   const deleteCourse = idx => setCourses(courses.filter((_, i) => i !== idx));
 
-  // SaveSettings can be used to sync with backend if needed
-  const saveSettings = () => {
+  // SaveSettings syncs with backend
+  const saveSettings = async () => {
+    await saveAllStates();
     alert('Settings saved!');
   };
 
