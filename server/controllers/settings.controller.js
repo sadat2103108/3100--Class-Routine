@@ -12,6 +12,7 @@ export const getSettings = async (req, res) => {
 
 export const updateSettings = async (req, res) => {
   try {
+    console.log('Received settings update:', req.body);
     let settings = await Settings.findOne();
     if (!settings) settings = await Settings.create({});
     settings.teachers = req.body.teachers || [];

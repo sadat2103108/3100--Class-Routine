@@ -1,11 +1,9 @@
-
-
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import ClassRoutineOrganizer from './components/ClassRoutineOrganizer';
 
 export const GlobalContext = createContext();
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || '';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 function App() {
   const [teachers, setTeachers] = useState([]);
@@ -54,19 +52,29 @@ function App() {
   // Save all states to backend
   const saveAllStates = useCallback(async () => {
     try {
-      await fetch(`${SERVER_URL}/api/settings`, {
+      const res1 = await fetch(`${SERVER_URL}/api/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teachers, courses, rooms })
       });
-    } catch {}
+      if (!res1.ok) {
+        console.error('Settings save failed:', res1.status, await res1.text());
+      }
+    } catch (err) {
+      console.error('Settings save error:', err);
+    }
     try {
-      await fetch(`${SERVER_URL}/api/routine`, {
+      const res2 = await fetch(`${SERVER_URL}/api/routine`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ routineData })
       });
-    } catch {}
+      if (!res2.ok) {
+        console.error('Routine save failed:', res2.status, await res2.text());
+      }
+    } catch (err) {
+      console.error('Routine save error:', err);
+    }
   }, [teachers, courses, rooms, routineData]);
 
   // Provide saveSettings for Settings page
