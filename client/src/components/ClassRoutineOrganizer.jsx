@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useContext } from 'react';
-import { Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 import SettingsPage from './Settings';
 import ClassRoutineTable from './ClassRoutine/ClassRoutineTable';
 import ClassModal from './ClassRoutine/ClassModal';
@@ -59,7 +59,7 @@ const ClassRoutineOrganizer = () => {
     '8:00-8:50', '8:50-9:40', '9:40-10:30', '10:50-11:40', '11:40-12:30',
     '12:30-1:20', '2:30-3:20', '3:20-4:10', '4:10-5:00'
   ];
-  
+
   const semesters = [
     "1st Year Odd",
     "1st Year Even",
@@ -275,6 +275,9 @@ const ClassRoutineOrganizer = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
+
+
+
       <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Class Routine Organizer</h1>
@@ -282,11 +285,26 @@ const ClassRoutineOrganizer = () => {
             <strong> CTRL+Drag </strong> to duplicate
           </p>
         </div>
+
         <div className="flex items-center gap-3">
+
           {/* Status Icon */}
           {saveStatus === 'syncing' && <Loader2 className="w-5 h-5 text-blue-400 animate-spin" title="Syncing..." />}
           {saveStatus === 'saved' && <CheckCircle2 className="w-5 h-5 text-green-400" title="Saved" />}
           {saveStatus === 'unsaved' && <AlertCircle className="w-5 h-5 text-yellow-400" title="Unsaved changes" />}
+          
+          
+          
+          {/* Download button */}
+          {/* <button
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
+            title="Download Routine"
+            onClick={() => {}}
+          >
+            <Download className="w-5 h-5 text-gray-600" />
+          </button> */}
+
+          {/* Settings button */}
           <button
             className="ml-2 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
             title="Settings"
@@ -294,8 +312,12 @@ const ClassRoutineOrganizer = () => {
           >
             <SettingsIcon className="w-6 h-6 text-gray-600" />
           </button>
+
         </div>
       </div>
+
+
+
       <div className="flex-1 overflow-hidden">
         <div ref={scrollContainerRef} className="h-full overflow-auto">
           <ClassRoutineTable
