@@ -12,20 +12,19 @@ function App() {
   const [routineData, setRoutineData] = useState([]);
 
 
-  // Fetch initial data from backend
+  /// FETCH INITIAL VALUES ////////////////////////////
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const res = await fetch(`${SERVER_URL}/api/settings`);
         if (!res.ok) throw new Error('Failed');
         const data = await res.json();
-        setTeachers(data.teachers || []);
-        setCourses(data.courses || []);
-        setRooms(data.rooms || []);
+        setTeachers(data.teachers);
+        setCourses(data.courses);
+        setRooms(data.rooms);
       } catch {
-        setTeachers([]);
-        setCourses([]);
-        setRooms([]);
+        console.log("Failed to fetch settings data");
+        
       }
     };
     const fetchRoutine = async () => {
@@ -33,24 +32,21 @@ function App() {
         const res = await fetch(`${SERVER_URL}/api/routine`);
         if (!res.ok) throw new Error('Failed');
         const data = await res.json();
-        setRoutineData(data.routineData || []);
+        setRoutineData(data.routineData);
       } catch {
-        setRoutineData([]);
+        console.log("Failed to fetch routine data");
+        
       }
     };
     fetchSettings();
     fetchRoutine();
   }, []);
 
-  // Save states to backend every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      saveAllStates();
-    }, 10000);
-    return () => clearInterval(interval);
-  });
+  /// /////////////////////////////////////
 
-  // Save all states to backend
+
+  // SAVING //////////
+
   const saveAllStates = useCallback(async () => {
     try {
       const res1 = await fetch(`${SERVER_URL}/api/settings`, {
@@ -78,22 +74,45 @@ function App() {
     }
   }, [teachers, courses, rooms, routineData]);
 
-  // Provide saveSettings for Settings page
+
+
+  // Save states to backend every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      saveAllStates();
+    }, 5000);
+    return () => clearInterval(interval);
+  });
+
+
+  /// ////////////////////
+
+
+
+
+  /// GLOBAL STATES ////// 
+
   const contextValue = {
-  teachers,
-  setTeachers,    
-  courses,
-  setCourses,     
-  rooms,
-  setRooms,
-  routineData,
-  setRoutineData,
-  saveAllStates,
-};
+    teachers,
+    setTeachers,
+    courses,
+    setCourses,
+    rooms,
+    setRooms,
+    routineData,
+    setRoutineData,
+    saveAllStates,
+  };
+
+  /// //////////////////
+
+
 
   return (
     <GlobalContext.Provider value={contextValue}>
+
       <ClassRoutineOrganizer />
+
     </GlobalContext.Provider>
   );
 }

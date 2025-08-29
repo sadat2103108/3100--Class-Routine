@@ -12,7 +12,6 @@ export const getRoutine = async (req, res) => {
 
 export const updateRoutine = async (req, res) => {
   try {
-    console.log('Received routine update:', req.body);
     let routine = await Routine.findOne();
     if (!routine) routine = await Routine.create({});
     routine.routineData = req.body.routineData || [];
