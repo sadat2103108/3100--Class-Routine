@@ -6,6 +6,8 @@ export const GlobalContext = createContext();
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 function App() {
+  const [loadedSettings, setLoadedSettings] = useState(false);
+  const [loadedRoutine, setLoadedRoutine] = useState(false);
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -18,6 +20,7 @@ function App() {
       try {
         const res = await fetch(`${SERVER_URL}/api/settings`);
         if (!res.ok) throw new Error('Failed');
+        setLoadedSettings(true);
         const data = await res.json();
         setTeachers(data.teachers);
         setCourses(data.courses);
@@ -31,6 +34,7 @@ function App() {
       try {
         const res = await fetch(`${SERVER_URL}/api/routine`);
         if (!res.ok) throw new Error('Failed');
+        setLoadedRoutine(true);
         const data = await res.json();
         setRoutineData(data.routineData);
       } catch {
@@ -48,6 +52,7 @@ function App() {
   // SAVING //////////
 
   const saveAllStates = useCallback(async () => {
+    if(!loadedRoutine || !loadedSettings) return;
     try {
       const res1 = await fetch(`${SERVER_URL}/api/settings`, {
         method: 'PUT',
@@ -78,6 +83,7 @@ function App() {
 
   // Save states to backend every 5 seconds
   useEffect(() => {
+    if(!loadedRoutine || !loadedSettings) return;
     const interval = setInterval(() => {
       saveAllStates();
     }, 5000);

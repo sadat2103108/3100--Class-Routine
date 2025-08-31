@@ -23,7 +23,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 .then(() => {
     app.listen(PORT, () => {
         console.log('MongoDB connected');
-        console.log(`Server running on ${process.env.BASE_URL + ':' + PORT}`);
+        console.log(`Server running on ${process.env.BASE_URL}...`);
     });
 })
     .catch(err => {
